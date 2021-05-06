@@ -1,0 +1,53 @@
+{
+    "characters": {
+        "Angel": {
+            "bg": "e7dee3",
+            "fg": "e0462e",
+            "energy": "shield",
+            "faces": [ "022", "133", "134" ]
+        },
+        "Cyclops": {
+            "bg": "2d2523",
+            "fg": "d9441a",
+            "energy": "zap",
+            "faces": [ "142", "153", "164" ]
+        },
+        "Iceman": {
+            "bg": "96c4d1",
+            "fg": "f0f0f0",
+            "energy": "zap",
+            "faces": [ "124", "136", "146" ]
+        },
+        "Juggernaut": {
+            "bg": "d86627",
+            "fg": "5f2a22",
+            "energy": "shield",
+            "faces": [ "163", "274", "376" ]
+        },
+        "KittyPryde": {
+            "bg": "e5ea12",
+            "fg": "2b294e",
+            "energy": "mask",
+            "faces": [ "022", "032", "133" ]
+        },
+        "Magneto": {
+            "bg": "ac7fa6",
+            "fg": "6d2940",
+            "energy": "mask",
+            "faces": [ "144", "257", "368" ]
+        },
+        "Quicksilver": {
+            "bg": "32af39",
+            "fg": "ebdbe8",
+            "energy": "zap",
+            "faces": [ "031", "132", "143" ]
+        },
+        "Wolverine": {
+            "bg": "32285d",
+            "fg": "d9dd30",
+            "energy": "fist",
+            "faces": [ "152", "263", "384" ],
+            "bursts": [ 1, 1, 0 ]
+        }
+    }
+}
