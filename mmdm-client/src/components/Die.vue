@@ -1,35 +1,47 @@
 <template>
-  <div class="die" :style="{color:fg, background:bg, transform:`rotate(${state.angle}deg)`}">
+  <div class="die" :style="{color:fg, background:bg, 'box-shadow': `0.3rem 0.3rem 0.3rem #666, inset 0 0 0.25rem ${outlineCol}`, transform:`rotate(${angle}deg)`}">
     <inline-svg class="icon" :src="`img/${icon}.svg`" :fill="fg" />
     <div class="text tl">{{ field }}</div>
     <div class="text tr">{{ attack }}</div>
-    <div class="text bl burst">{{ burst }}</div>
+    <div class="text bl burst">{{ bursts }}</div>
     <div class="text br">{{ defense }}</div>
   </div>
 </template>
 
-<script setup>
-import { defineProps, reactive } from 'vue'
+<script>
 import InlineSvg from 'vue-inline-svg'
+import Color from 'color';
 
-defineProps({
-  icon: {type: String, default: ""},
-  fg: {type: String, default: ""},
-  bg: {type: String, default: ""},
-  field: {type: String, default: ""},
-  attack: {type: String, default: ""},
-  defense: {type: String, default: ""},
-  burst: {type: String, default: ""},
-})
+export default {
+    components: {
+        InlineSvg,
+    },
 
-const state = reactive({ angle: 10 * (Math.random()-0.5) })
+    props: {
+        icon: {type: String, default: ""},
+        fg: {type: String, default: "#000000"},
+        bg: {type: String, default: "#ffffff"},
+        field: {type: String, default: ""},
+        attack: {type: String, default: ""},
+        defense: {type: String, default: ""},
+        bursts: {type: String, default: ""},
+    },
+
+    data() {
+        return {
+            angle: 10 * (Math.random()-0.5),
+        };
+    },
+
+    computed: {
+        outlineCol() { return Color(this.bg).saturate(1.8).darken(0.75); },
+    },
+};
 </script>
 
 <style lang="less" scoped>
 .die {
     display: inline-block;
-    box-shadow: 0.3rem 0.3rem 0.3rem #666;
-    border: 1px solid #999;
     width: 4rem;
     height: 4rem;
     border-radius: 0.35rem;
@@ -63,8 +75,8 @@ const state = reactive({ angle: 10 * (Math.random()-0.5) })
         }
 
         &.burst {
-            font-size: 1.0rem;
-            bottom: -0.3rem;
+            font-size: 1.5rem;
+            bottom: -0.5rem;
         }
     }
 }
