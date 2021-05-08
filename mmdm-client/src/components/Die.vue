@@ -42,8 +42,8 @@ export default {
 <style lang="less" scoped>
 .die {
     display: inline-block;
-    width: 4rem;
-    height: 4rem;
+    width: 3.5rem;
+    height: 3.5rem;
     border-radius: 0.35rem;
     position: relative;
 

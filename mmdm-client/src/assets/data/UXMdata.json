@@ -1,8 +1,8 @@
 {
     "characters": {
         "Angel": {
-            "bg": "e7dee3",
-            "fg": "e0462e",
+            "bg": "f3eeeb",
+            "fg": "f0462e",
             "energy": "shield",
             "faces": [ "022", "133", "134" ]
         },
