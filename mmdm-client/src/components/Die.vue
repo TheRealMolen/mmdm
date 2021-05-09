@@ -1,6 +1,6 @@
 <template>
   <div class="die" :style="{color:fg, background:bg, 'box-shadow': `0.3rem 0.3rem 0.3rem #666, inset 0 0 0.25rem ${outlineCol}`, transform:`rotate(${angle}deg)`}">
-    <inline-svg class="icon" :src="`img/${icon}.svg`" :fill="fg" />
+    <inline-svg class="icon" :src="`/mmdm/assets/img/${icon}.svg`" :fill="fg" />
     <div class="text tl">{{ field }}</div>
     <div class="text tr">{{ attack }}</div>
     <div class="text bl burst">{{ bursts }}</div>
@@ -76,7 +76,7 @@ export default {
 
         &.burst {
             font-size: 1.5rem;
-            bottom: -0.5rem;
+            bottom: -0.7rem;
         }
     }
 }

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <img src="img/UXMback.jpg" />
+    <img :src="'/mmdm/assets/img/UXMback.jpg'" />
 
     <h1>mmdm live</h1>
 

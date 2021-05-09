@@ -32,7 +32,7 @@ export default {
     },
 
     imageUrlVar() {
-      return { "--bgimg-url": `url(img/${this.pack}${this.safeId}.jpg)` };
+      return { "--bgimg-url": `url(/mmdm/assets/img/${this.pack}${this.safeId}.jpg)` };
     },
   },
 };
