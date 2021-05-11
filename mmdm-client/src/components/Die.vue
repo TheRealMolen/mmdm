@@ -51,11 +51,12 @@ export default {
     border-radius: 0.35rem;
     position: relative;
     box-shadow: 0.3rem 0.3rem 0.3rem rgba(0,0,0,0.4), inset 0 0 0.25rem var(--inner-shadow-col);
-    box-sizing: border-box;
+    box-sizing: content-box;
 
     &:hover {
         border: 2px solid lime;
         box-shadow: 0.5rem 0.5rem 0.5rem rgba(0,0,0,0.4), inset 0 0 0.25rem var(--inner-shadow-col);
+        cursor: grab;
     }
 
     .icon {

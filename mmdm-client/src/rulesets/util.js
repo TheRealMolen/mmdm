@@ -49,7 +49,7 @@ export const makeCharacterDie = (card, ruleset = null) => {
 
 
 export const pickActionColour = existingCards => {
-  const allColours = ['#E66C2C', '#DC95DF', '#538F46', '#6FACED'];
+  const allColours = ['#E68C3C', '#DC95DF', '#63BF56', '#6FACED'];
   const available = allColours.filter(col => {
     return !existingCards.some(card => {
       return card.tint == col;

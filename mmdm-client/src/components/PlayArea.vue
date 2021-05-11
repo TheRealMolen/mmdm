@@ -30,10 +30,15 @@
         <dice-area size="small" :dice="player.prep" />
       </div>
     </div>
-    <div class="oop pt-5">
-      out<br>of<br>play
-      <div class="overlay">
-        <dice-area size="small" :dice="player.outOfPlay" />
+    <div class="oop pt-5 d-flex flex-column">
+      <div class="flex-grow-1">
+        out<br>of<br>play
+        <div class="overlay">
+          <dice-area size="small" :dice="player.outOfPlay" />
+        </div>
+      </div>
+      <div class="bag">
+        {{ bagCount }} dice in bag
       </div>
     </div>
   </div>
@@ -50,6 +55,25 @@ export default {
   props: {
     player: { type: Object, required: true },
     invert: {type: Boolean, default: false },
+  },
+
+  computed: {
+    bagCount() {
+      const count = this.player.bag.length;
+      if (this.player.local) {
+        return count;
+      }
+      if (count === 0) {
+        return "No";
+      }
+      if (count < 4) {
+        return "A few";
+      }
+      if (count > 10) {
+        return "Loads of";
+      }
+      return "Some";
+    },
   },
 }
 </script>
@@ -107,6 +131,7 @@ export default {
     left: 0;
     width: 100%;
     height: 100%;
+    padding: 3%;
   }
 }
 </style>

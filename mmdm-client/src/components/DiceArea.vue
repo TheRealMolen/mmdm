@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex flex-wrap p-2">
+  <div class="d-flex flex-wrap justify-content-evenly pt-4">
     <div v-for="die in dice" :key="die.uid" class="die-container" :class="size">
       <die class="mb-1"
         :size="size"
