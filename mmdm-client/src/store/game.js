@@ -111,7 +111,13 @@ const mutations = {
     const dest = state.players[playerNum].used;
     const source = die.card.dice;
 
-    const sourceIx = source.findIndex(test => { test.uid === die.uid; });
+    const sourceIx = source.findIndex(test => test.uid === die.uid);
+    if (sourceIx < 0) {
+      console.error(`tried to buy die ${die.uid} but we couldn't find where it came from`);
+      console.log(die);
+      console.log(source);
+      return;
+    }
     source.splice(sourceIx, 1);
 
     roll(die);
