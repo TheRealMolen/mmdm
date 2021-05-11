@@ -1,14 +1,14 @@
 import { createApp } from 'vue'
-import Vuex from 'vuex';
 
 import 'bootstrap/scss/bootstrap.scss'
 
 import router from './routes'
+import store from './store'
 import App from './App.vue'
 
 const app = createApp(App)
 
-app.use(Vuex)
 app.use(router)
+app.use(store)
 
 app.mount('#app')

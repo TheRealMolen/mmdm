@@ -25,7 +25,7 @@ export default {
             faces: [ '163', '274', '376' ]
         },
         KittyPryde: {
-            bg: 'e5ea12',
+            bg: 'rgb(209, 185, 4, 0.6)',
             fg: '2b294e',
             energy: 'mask',
             faces: [ '022', '032', '133' ]

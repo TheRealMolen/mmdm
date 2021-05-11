@@ -28,6 +28,7 @@ export default {
 
         size: {type: String, default: "large" },
         angle: {type: Number},
+        maxAngle: {type: Number, default: 5},
     },
 
     computed: {
@@ -36,7 +37,7 @@ export default {
         safeAngle() {
             if (this.angle)
                 return this.angle;
-            return 10 * (Math.random()-0.5);
+            return 2 * this.maxAngle * (Math.random()-0.5);
         },
     },
 };

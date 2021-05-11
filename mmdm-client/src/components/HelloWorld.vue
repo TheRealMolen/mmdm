@@ -28,6 +28,10 @@ export default {
   },
 
   computed: {
+    game() {
+      return this.$store.state.game;
+    },
+
     allCards() {
       return uxm.cards.map(cardInfo => {
         const card = {...cardInfo};
@@ -64,6 +68,10 @@ export default {
         return card;
       });
     },
+  },
+
+  mounted() {
+    this.$store.dispatch('setupStarterGame');
   },
 }
 </script>
