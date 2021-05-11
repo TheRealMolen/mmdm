@@ -1,17 +1,17 @@
 <template>
-  <div>
-    <img :src="'/mmdm/assets/img/UXMback.jpg'" />
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-3">
+        <img :src="'/mmdm/assets/img/UXMback.jpg'" class="w-75" />
 
-    <h1>mmdm live</h1>
-
-    <!--div class="mb-2" v-for="(character,charIndex) in characterDice" :key="charIndex">
-      <div class="d-inline" v-for="(dice,dieIndex) in character" :key="dieIndex">
-        <die class="mr-2" :icon="dice.icon" :bg="dice.bg" :fg="dice.fg" :field="dice.field" :attack="dice.attack" :defense="dice.defense" :bursts="dice.bursts" />
+        <h1>mmdm live</h1>
       </div>
-    </div-->
 
-    <div class="mb-2" v-for="card in allCards" :key="card.id">
-      <card :card="card" />
+      <div class="col-9">
+        <div class="mb-2 d-inline-block " v-for="card in allCards" :key="card.id">
+          <card :card="card" size="small" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -28,24 +28,6 @@ export default {
   },
 
   computed: {
-    characterDice() {
-      return Object.entries(uxm.characters).map(([who,stats]) => {
-        const fg = '#' + stats.fg;
-        const bg = '#' + stats.bg;
-        const oneEnergy = { fg, bg, icon:stats.energy };
-        const twoEnergy = { fg, bg, icon:stats.energy+'x2' };
-        const dice = [oneEnergy, twoEnergy, twoEnergy];
-        for (let i=0; i<3; ++i) {
-          const die = { fg, bg, icon:who.toLowerCase(), field:stats.faces[i][0], attack:stats.faces[i][1], defense:stats.faces[i][2] };
-          if (stats.bursts && stats.bursts[i] > 0) {
-            die.bursts = '****'.substring(0, stats.bursts[i]);
-          }
-          dice.push(die);
-        }
-        return dice;
-      });
-    },
-
     allCards() {
       return uxm.cards.map(cardInfo => {
         const card = {...cardInfo};
@@ -87,13 +69,4 @@ export default {
 </script>
 
 <style scoped>
-.mr-2 {
-  margin-right: 0.5rem;
-}
-.mb-2 {
-  margin-bottom: 0.5rem;
-}
-.d-inline {
-  display: inline;
-}
 </style>
