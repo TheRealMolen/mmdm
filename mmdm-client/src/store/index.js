@@ -1,4 +1,4 @@
-import { createStore } from 'vuex'
+import { createStore, createLogger } from 'vuex'
 
 import game from './game'
 
@@ -8,4 +8,5 @@ export default createStore({
       game,
     },
     strict: false,
+    plugins: [createLogger()],
   })

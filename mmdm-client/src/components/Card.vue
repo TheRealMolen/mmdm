@@ -1,23 +1,15 @@
 <template>
-  <div class="d-flex">
-    <div class="position-relative">
-      <div class="card" :class="size" :style="imageUrlVar"></div>
-      <div v-for="die in card.dice" :key="die.uid" class="position-absolute" :style="{left:slots[die.uid].left+'%', top:slots[die.uid].top+'%'}">
-        <die class="mb-1"
-          :size="size"
-          :angle="slots[die.uid].angle"
-          :icon="die.face.icon"
-          :bg="die.face.bg"
-          :fg="die.face.fg"
-          :field="die.face.field"
-          :attack="die.face.attack"
-          :defense="die.face.defense"
-          :bursts="die.face.bursts"
-        />
-      </div>
+  <div class="d-flex position-relative">
+    <div class="card" :class="size" :style="imageUrlVar" :title="card.text + (card.globaltext ? '\n\nGlobal: ' + card.globaltext : '')"></div>
+    <div v-for="die in card.dice" :key="die.uid" class="position-absolute" :style="{left:slots[die.uid].left+'%', top:slots[die.uid].top+'%'}">
+      <die class="mb-1"
+        :size="size"
+        :angle="slots[die.uid].angle"
+        :die="die"
+      />
+    </div>
 
-      <div v-if="card.die.type == 'action'" class="tint" :class="size" :style="{'--tint': tint}">
-      </div>
+    <div v-if="card.die.type == 'action'" class="tint" :class="size" :style="{'--tint': tint}">
     </div>
   </div>
 </template>
@@ -34,7 +26,7 @@ export default {
   props: {
     pack: { type: String, default: "UXM" },
     id: { type: String },
-    card: { type: Object, default: {} },
+    card: { type: Object, required: true },
     size: { type: String, default: 'large' },
   },
 

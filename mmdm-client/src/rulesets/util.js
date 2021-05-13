@@ -6,12 +6,12 @@ export const makeSidekickDie = () => {
   const bg = '#eee';
 
   const faces = [
-    { fg, bg, icon: 'mask' },
-    { fg, bg, icon: 'zap' },
-    { fg, bg, icon: 'fist' },
-    { fg, bg, icon: 'shield' },
-    { fg, bg, icon: 'wild' },
-    { fg, bg, icon: 'prawn', field: '0', attack: '1', defense: '1' },
+    { fg, bg, icon: 'mask', type: 'energy' },
+    { fg, bg, icon: 'zap', type: 'energy' },
+    { fg, bg, icon: 'fist', type: 'energy' },
+    { fg, bg, icon: 'shield', type: 'energy' },
+    { fg, bg, icon: 'wild', type: 'energy' },
+    { fg, bg, icon: 'prawn', field: '0', attack: '1', defense: '1', type: 'character' },
   ];
 
   return { faces, type: 'sidekick' };
@@ -32,12 +32,12 @@ export const makeCharacterDie = (card, ruleset = null) => {
   const fg = htmlifyColour(stats.fg);
   const bg = htmlifyColour(stats.bg);
 
-  const oneEnergy = { fg, bg, icon: stats.energy };
-  const twoEnergy = { fg, bg, icon: stats.energy + 'x2' };
+  const oneEnergy = { fg, bg, icon: stats.energy, type: 'energy' };
+  const twoEnergy = { fg, bg, icon: stats.energy + 'x2', type: 'energy' };
 
   const faces = [oneEnergy, twoEnergy, twoEnergy];
   for (let i = 0; i < 3; ++i) {
-    const face = { fg, bg, icon: card.character.toLowerCase(), field: stats.faces[i][0], attack: stats.faces[i][1], defense: stats.faces[i][2] };
+    const face = { fg, bg, icon: card.character.toLowerCase(), field: stats.faces[i][0], attack: stats.faces[i][1], defense: stats.faces[i][2], type: 'character' };
     if (stats.bursts && stats.bursts[i] > 0) {
       face.bursts = '****'.substring(0, stats.bursts[i]);
     }
@@ -68,11 +68,11 @@ export const makeActionDie = (card) => {
 
   const faces = [];
   for (let i = 0; i < 3; ++i) {
-    faces.push({ bg: tint, fg: '#222', icon: 'two' });
+    faces.push({ bg: tint, fg: '#222', icon: 'two', type: 'energy' });
   }
   let bursts = '';
   for (let i = 0; i < 3; ++i) {
-    faces.push({ bg: tint, fg: '#222', icon: 'action', bursts });
+    faces.push({ bg: tint, fg: '#222', icon: 'action', bursts, type: 'action' });
     bursts += '*';
   }
 

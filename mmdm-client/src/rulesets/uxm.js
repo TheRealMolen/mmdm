@@ -334,7 +334,7 @@ export default {
             id: 30,
             action: true,
             name: 'Reckless Melee',
-            text: 'Deal 1 damage to each characters (including yours).\n<burst> Instead, deal 1 damage to each player.\n<burst><burst> Instead, deal 1 damage to each player and 1 damage to each character.',
+            text: 'Deal 1 damage to each character (including yours).\n<burst> Instead, deal 1 damage to each player.\n<burst><burst> Instead, deal 1 damage to each player and 1 damage to each character.',
             cost: 3,
             max: 3,
         },

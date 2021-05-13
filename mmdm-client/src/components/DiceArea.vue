@@ -4,13 +4,7 @@
       <die class="mb-1"
         :size="size"
         :max-angle="20"
-        :icon="die.face.icon"
-        :bg="die.face.bg"
-        :fg="die.face.fg"
-        :field="die.face.field"
-        :attack="die.face.attack"
-        :defense="die.face.defense"
-        :bursts="die.face.bursts"
+        :die="die"
       />
     </div>
   </div>

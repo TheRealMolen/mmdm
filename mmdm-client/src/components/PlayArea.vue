@@ -7,25 +7,25 @@
       </div>
     </div>
     <div class="field area">
-      feld
+      FIELD
       <div class="overlay">
         <dice-area size="small" :dice="player.fielded" />
       </div>
     </div>
     <div class="used area">
-      USD
+      USED
       <div class="overlay">
         <dice-area size="small" :dice="player.used" />
       </div>
     </div>
     <div class="reserve area">
-      RERV
+      RESERVE
       <div class="overlay">
-        <dice-area size="small" :dice="player.bag" />
+        <dice-area size="small" :dice="player.reserve" />
       </div>
     </div>
     <div class="prep area">
-      PROOOPP
+      PREP
       <div class="overlay">
         <dice-area size="small" :dice="player.prep" />
       </div>
@@ -102,24 +102,29 @@ export default {
   }
 
   .area {
-    border: 2px solid #555;
+    border: 2px solid #333;
     margin: -2px 0 0 -2px;
   }
 
   .attack {
     grid-area: attack;
+    background-color: #E68E83;
   }
   .used {
     grid-area: used;
+    background-color: #70A3BF;
   }
   .field {
     grid-area: field;
+    background-color: #C0D682;
   }
   .prep {
     grid-area: prep;
+    background-color: #DFD290;
   }
   .reserve {
     grid-area: reserve;
+    background-color: #F2EBD4;
   }
   .oop {
     grid-area: oop;
