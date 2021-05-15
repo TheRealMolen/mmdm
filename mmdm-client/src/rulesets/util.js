@@ -94,3 +94,95 @@ export const findCard = (name, character=null, ruleset=uxm) => {
   });
 };
 
+
+
+export const splitDiceByFaceType = dice => {
+  const split = { character: [], energy: [], action: [] };
+  dice.forEach(die => split[die.face.type].push(die));
+  return split;
+};
+
+
+export const calcFieldingCosts = dice => {
+  const costs = { total: 0, energies: [] };
+  dice.forEach(die => {
+    if (die.face.field > 0) {
+      costs.total += die.face.field;
+      costs.energies.push(die.character.energy);
+    }
+  });
+  return costs;
+};
+
+export const accountDiceVsFieldingCosts = (dice, costs) => {
+  const running = {...costs, diceLeft: [...dice], spent: [], spinDown: []};
+  const wilds = [];
+
+  // start with non-wildcards and single spindowns
+  while (running.diceLeft.length > 0) {
+    const die = running.diceLeft.pop();
+
+    if (die.face.icon === 'wild') {
+      wilds.push(die);
+      continue;
+    }
+
+    --running.total;
+    if (die.face.icon === 'two') {
+      --running.total;
+    }
+
+    const energy = die.face.icon.replace('x2', '');
+    if (die.face.icon.endsWith('x2')) {
+      running.spinDown.push(die);
+    }
+    const energyIx = running.energies.indexOf(energy);
+    if (energyIx >= 0) {
+      running.energies.splice(energyIx, 1);
+    }
+
+    running.spent.push(die);
+  }
+
+  // use spindowns if needed
+  if (running.total > 0 || running.energies.length > 0) {
+    for (let ix=0; ix<running.spinDown.length; ++ix) {
+      const die = running.spinDown[ix];
+
+      const energy = die.face.icon.replace('x2', '');
+      const energyIx = running.energies.indexOf(energy);
+      if (energyIx < 0 && running.total == 0) {
+        // this die can't help us here
+        continue;
+      }
+
+      if (energyIx >= 0) {
+        running.energies.splice(energyIx, 1);
+      }
+      --running.total;
+      running.spent.push(die);
+    }
+  }
+
+  // use all the wilds we have
+  while (wilds.length > 0) {
+    const die = wilds.pop();
+    --running.total;
+    if (running.energies.length > 0) {
+      running.energies.pop();
+    }
+    running.spent.push(die);
+  }
+
+  // summarise
+  if (running.total <= 0 && running.energies.length === 0) {
+    running.enough = true;
+
+    if (running.total < 0) {
+      running.tooMuch = true;
+    }
+  }
+
+  return running;
+};
+
