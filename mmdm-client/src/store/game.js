@@ -69,12 +69,12 @@ const actions = {
     commit('addActionCard', {card:findCard('Enrage'), numDice:3});
     commit('addActionCard', {card:findCard('Reckless Melee'), numDice:3});
 
-    // -------
-    commit('buyDie', { playerNum:0, die: state.players[0].cards[0].dice[1] });
-    commit('buyDie', { playerNum:0, die: state.players[0].cards[0].dice[0] });
-    commit('buyDie', { playerNum:0, die: state.players[0].cards[1].dice[1] });
-    commit('buyDie', { playerNum:0, die: state.players[0].cards[1].dice[0] });
-    commit('moveAllDice', { source:'used', dest: 'prep' });
+    // --  testing  ------
+    // commit('buyDie', { playerNum:0, die: state.players[0].cards[0].dice[1] });
+    // commit('buyDie', { playerNum:0, die: state.players[0].cards[0].dice[0] });
+    // commit('buyDie', { playerNum:0, die: state.players[0].cards[1].dice[1] });
+    // commit('buyDie', { playerNum:0, die: state.players[0].cards[1].dice[0] });
+    // commit('moveAllDice', { source:'used', dest: 'prep' });
   },
 
 
@@ -133,6 +133,31 @@ const actions = {
   },
 
 
+  startAttack({commit, state}) {
+    if (state.phase !== 'main') {
+      throw `trying to move to attack phase when in the ${state.phase} phase is forbidden!`;
+    }
+    if (state.selectedDice.length > 0) {
+      throw `can't start attack while dice are still selected`;
+    }
+    
+    const unfieldedCharacters = state.players[state.currentTurn].reserve.filter(die => die.face.type === 'character');
+    commit('moveAllDice', { source: 'reserve', dice:unfieldedCharacters, dest: 'used' });
+    commit('changePhase', {phase:'attack'});
+  },
+
+  finishTurn({commit, state}) {
+    if (state.phase !== 'attack') {
+      throw `trying to finish turn when in the ${state.phase} phase is forbidden!`;
+    }
+    if (state.selectedDice.length > 0) {
+      throw `can't end turn while dice are still selected`;
+    }
+    
+    commit('endTurn');
+  },
+
+
   // -----------------------------------------
   dieClicked({commit, state}, {die}) {
     // TODO: validate
@@ -142,6 +167,11 @@ const actions = {
     [...dice].forEach(die => {
       commit('toggleDieSelection', {die, selected:false});
     });
+  },
+
+
+  clearResolvedEffects({commit}) {
+    commit('clearResolvedEffects');
   },
 }
 
@@ -295,6 +325,9 @@ const mutations = {
 
   addEffectToResolve(state, {die, effect}) {
     state.effectsToResolve.push({ die, effect });
+  },
+  clearResolvedEffects(state) {
+    state.effectsToResolve = [];
   },
 
 

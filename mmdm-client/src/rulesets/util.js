@@ -136,12 +136,14 @@ export const accountDiceVsFieldingCosts = (dice, costs) => {
     if (die.face.icon.endsWith('x2')) {
       running.spinDown.push(die);
     }
+    else {
+      running.spent.push(die);
+    }
+    
     const energyIx = running.energies.indexOf(energy);
     if (energyIx >= 0) {
       running.energies.splice(energyIx, 1);
     }
-
-    running.spent.push(die);
   }
 
   // use spindowns if needed

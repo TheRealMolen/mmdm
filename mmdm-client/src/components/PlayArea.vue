@@ -1,5 +1,5 @@
 <template>
-  <div class="play-mat" :class="{invert}">
+  <div class="play-mat" :class="{invert, active}">
     <div class="attack area">
       ATTACK
       <div class="overlay">
@@ -54,10 +54,14 @@ export default {
 
   props: {
     player: { type: Object, required: true },
-    invert: {type: Boolean, default: false },
+    invert: { type: Boolean, default: false },
   },
 
   computed: {
+    active() { 
+      return this.$store.state.game.currentTurn === this.player.num;
+    },
+
     bagCount() {
       const count = this.player.bag.length;
       if (this.player.local) {
@@ -96,6 +100,10 @@ export default {
       "oop prep field used"
       "oop attack attack attack";
     }
+
+  &.active {
+    background-color: #8d8;
+  }
 
   & > div {
     position: relative;

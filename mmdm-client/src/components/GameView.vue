@@ -169,6 +169,7 @@ export default {
                 }, Promise.resolve());
                 promiseChain.catch(err => alert(err));
                 promiseChain.finally((resolve, reject) => {
+                  that.$store.dispatch('clearResolvedEffects');
                   that.resolving = false;
                 });
               });
@@ -189,7 +190,7 @@ export default {
           },
           doit() {
             that.$store.dispatch('doBuyDice');
-            // TODO: resolve effects in game.effectsToRresolve
+            // TODO: resolve effects in game.effectsToResolve
           },
         });
 
@@ -198,6 +199,29 @@ export default {
             name: `Global: ${card.name}`,
             desc: card.globaltext,
           });
+        });
+        
+        moves.push({
+          name: 'Start Attack',
+          desc: 'Move to the Attack phase',
+          doit() {
+            that.$store.dispatch('deselect', {dice: that.selected});
+            that.$store.dispatch('startAttack');
+          },
+        });
+
+        return moves;
+      }
+
+      if (phase === 'attack') {
+        const moves = [];
+
+        moves.push({
+          name: 'End Turn',
+          doit() {
+            that.$store.dispatch('deselect', {dice: that.selected});
+            that.$store.dispatch('finishTurn');
+          },
         });
 
         return moves;
