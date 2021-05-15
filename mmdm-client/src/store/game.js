@@ -44,6 +44,7 @@ const state = () => ({
   rerolled: false,
 
   selectedDice: [],
+  effectsToResolve: [],
 });
 
 
@@ -67,6 +68,13 @@ const actions = {
     commit('addActionCard', {card:findCard('Ambush'), numDice:3});
     commit('addActionCard', {card:findCard('Enrage'), numDice:3});
     commit('addActionCard', {card:findCard('Reckless Melee'), numDice:3});
+
+    // -------
+    commit('buyDie', { playerNum:0, die: state.players[0].cards[0].dice[1] });
+    commit('buyDie', { playerNum:0, die: state.players[0].cards[0].dice[0] });
+    commit('buyDie', { playerNum:0, die: state.players[0].cards[1].dice[1] });
+    commit('buyDie', { playerNum:0, die: state.players[0].cards[1].dice[0] });
+    commit('moveAllDice', { source:'used', dest: 'prep' });
   },
 
 
@@ -94,16 +102,34 @@ const actions = {
 
 
   // -----------------------------------------
-  doReroll({commit, state}) {
-    commit('rollDice', { dice: state.selectedDice });
-
-    // make sure to deselect
-    [...state.selectedDice].forEach(die => {
-      commit('toggleDieSelection', {die, selected:false});
-    });
+  doReroll({commit, state}, {dice}) {
+    if (state.phase !== 'main') {
+      throw `trying to reroll when in the ${state.phase} phase is forbidden!`;
+    }
+    if (state.rerolled) {
+      throw `only one reroll is allowed!`;
+    }
+    
+    commit('rollDice', { dice });
 
     // forbid further rerolls
     commit('setRerolled');
+  },
+
+  doField({commit, state}, {diceToField, diceToSpend, diceToSpinDown}) {
+    if (state.phase !== 'main') {
+      throw `trying to field characters when in the ${state.phase} phase is forbidden!`;
+    }
+
+    diceToField.forEach(die => {
+      if (typeof die.card !== 'undefined' && typeof die.card.whenFielded !== 'undefined') {
+        commit('addEffectToResolve', {die, effect:'whenFielded'});
+      }
+    });
+
+    commit('moveAllDice', { source: 'reserve', dice:diceToField, dest: 'fielded' });
+    commit('moveAllDice', { source: 'reserve', dice:diceToSpend, dest: 'outOfPlay' });
+    diceToSpinDown.forEach(die => commit('spinDown', {die}));
   },
 
 
@@ -111,6 +137,11 @@ const actions = {
   dieClicked({commit, state}, {die}) {
     // TODO: validate
     commit('toggleDieSelection', {die});
+  },
+  deselect({commit}, {dice}) {
+    [...dice].forEach(die => {
+      commit('toggleDieSelection', {die, selected:false});
+    });
   },
 }
 
@@ -130,7 +161,7 @@ const mutations = {
     const cardInstance = {...card, numDice, owner: playerNum, dice: []};
     cardInstance.die = makeCharacterDie(cardInstance);
     for (let i=0; i<numDice; ++i) {
-      cardInstance.dice.push({ faces: cardInstance.die.faces, uid: nextDiceUid++, card: cardInstance });
+      cardInstance.dice.push({ ...cardInstance.die, uid: nextDiceUid++, card: cardInstance });
     }
     player.cards.push(cardInstance);
 
@@ -143,7 +174,7 @@ const mutations = {
     const cardInstance = {...card, numDice, tint: pickActionColour(state.actionCards), dice: []};
     cardInstance.die = makeActionDie(cardInstance);
     for (let i=0; i<numDice; ++i) {
-      cardInstance.dice.push({ faces: cardInstance.die.faces, uid: nextDiceUid++, card: cardInstance });
+      cardInstance.dice.push({ ...cardInstance.die, uid: nextDiceUid++, card: cardInstance });
     }
     state.actionCards.push(cardInstance);
 
@@ -232,17 +263,38 @@ const mutations = {
     player.prep.push(die);
   },
 
-  moveAllDice(state, {source, dest}) {
+  moveAllDice(state, payload) {
+    const {source, dest} = payload;
     const player = state.players[state.currentTurn];
-    player[source].forEach(die => {
+    const filtered = typeof payload.dice !== 'undefined';
+
+    const dice = filtered ? payload.dice : player[source];
+    while (dice.length > 0) {
+      const die = dice.pop();
+      if (filtered) {
+        player[source].splice(player[source].indexOf(die), 1);
+      }
+
       player[dest].push(die);
       die.location = dest;
-    });
-    player[source].splice(0, player[source].length);
+    }
   },
 
   rollDice(state, { dice }) {
     dice.forEach(roll);
+  },
+  spinDown(state, {die}) {
+    const energy = die.face.icon.replace('x2','');
+    const newFace = die.faces.find(face => face.icon === energy);
+    if (typeof newFace === 'undefined') {
+      throw 'Cannot spin down a die that has no single-energy sides!';
+    }
+    die.face = newFace;
+  },
+
+
+  addEffectToResolve(state, {die, effect}) {
+    state.effectsToResolve.push({ die, effect });
   },
 
 

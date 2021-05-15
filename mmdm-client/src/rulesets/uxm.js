@@ -90,6 +90,13 @@ export default {
             affiliation: 'xmen',
             cost: 6,
             max: 4,
+            whenFielded: {
+                async: true,    // because opponent needs to decide whether to take damage personally or let character take it
+                resolve() {
+                    alert('TODO: enemy character takes 3 damage from Cyclops');
+                    return Promise.resolve();
+                },
+            },
         },
         {
             id: 5,

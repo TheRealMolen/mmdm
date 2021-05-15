@@ -11,7 +11,7 @@ export const makeSidekickDie = () => {
     { fg, bg, icon: 'fist', type: 'energy' },
     { fg, bg, icon: 'shield', type: 'energy' },
     { fg, bg, icon: 'wild', type: 'energy' },
-    { fg, bg, icon: 'prawn', field: '0', attack: '1', defense: '1', type: 'character' },
+    { fg, bg, icon: 'prawn', field: 0, attack: 1, defense: 1, type: 'character' },
   ];
 
   return { faces, type: 'sidekick' };
@@ -37,14 +37,14 @@ export const makeCharacterDie = (card, ruleset = null) => {
 
   const faces = [oneEnergy, twoEnergy, twoEnergy];
   for (let i = 0; i < 3; ++i) {
-    const face = { fg, bg, icon: card.character.toLowerCase(), field: stats.faces[i][0], attack: stats.faces[i][1], defense: stats.faces[i][2], type: 'character' };
+    const face = { fg, bg, icon: card.character.toLowerCase(), field: +stats.faces[i][0], attack: +stats.faces[i][1], defense: +stats.faces[i][2], type: 'character' };
     if (stats.bursts && stats.bursts[i] > 0) {
       face.bursts = '****'.substring(0, stats.bursts[i]);
     }
     faces.push(face);
   }
 
-  return { card, faces, type: 'character' };
+  return { card, character:stats, faces, type: 'character' };
 };
 
 
