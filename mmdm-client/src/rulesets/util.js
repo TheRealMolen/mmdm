@@ -101,6 +101,11 @@ export const splitDiceByFaceType = dice => {
   dice.forEach(die => split[die.face.type].push(die));
   return split;
 };
+export const splitDiceByLocation = dice => {
+  const split = { card: [], bag: [], reserve: [], fielded: [], attackers:[], prep: [], outOfPlay: [] };
+  dice.forEach(die => split[die.location].push(die));
+  return split;
+};
 
 
 export const calcFieldingCosts = dice => {
@@ -113,8 +118,19 @@ export const calcFieldingCosts = dice => {
   });
   return costs;
 };
+export const calcPurchaseCosts = dice => {
+  const costs = { total: 0, energies: [] };
+  dice.forEach(die => {
+    costs.total += die.card.cost;
+    if (typeof die.character !== 'undefined') {
+      costs.energies.push(die.character.energy);
+    }
+  });
+  return costs;
+};
 
-export const accountDiceVsFieldingCosts = (dice, costs) => {
+
+export const accountDiceVsCosts = (dice, costs) => {
   const running = {...costs, diceLeft: [...dice], spent: [], spinDown: []};
   const wilds = [];
 

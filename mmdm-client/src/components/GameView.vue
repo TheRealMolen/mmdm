@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import {splitDiceByFaceType, calcFieldingCosts, accountDiceVsFieldingCosts} from '../rulesets/util';
+import {splitDiceByFaceType, splitDiceByLocation, calcFieldingCosts, calcPurchaseCosts, accountDiceVsCosts} from '../rulesets/util';
 import CardArea from './CardArea.vue';
 import PlayArea from './PlayArea.vue';
 
@@ -113,6 +113,59 @@ export default {
             },
           });
         }
+        
+        moves.push({
+          name: 'Buy',
+          desc: 'Buy dice from cards (select dice and the energy to buy them)',
+          precondition() {
+            if (!that.selected.length) {
+              return 'You need to select at least one die to buy';
+            }
+            const diceByLocation = splitDiceByLocation(that.selected);
+            if (diceByLocation.card.length === 0) {
+              return 'You need to select some dice to buy';
+            }
+            if (!diceByLocation.card.every(die => die.card.owner !== 1-that.game.currentTurn)) {
+              return 'You can only buy dice from your own cards or from action cards';
+            }
+            if (!diceByLocation.reserve.every(die => die.owner === that.game.currentTurn)) {
+              return 'You can only buy dice using energy you own';
+            }
+            if (!diceByLocation.reserve.every(die => die.face.type === 'energy')) {
+              return 'You can only buy dice using energy';
+            }
+            if (diceByLocation.card.length + diceByLocation.reserve.length !== that.selected.length) {
+              return 'You can only buy dice with dice in your reserve';
+            }
+
+            const costs = calcPurchaseCosts(diceByLocation.card);
+            const account = accountDiceVsCosts(diceByLocation.reserve, costs);
+            if (!account.enough) {
+              let msg = `You haven't covered the purchase costs: `;
+              if (account.total > 0) {
+                msg += `You need ${account.total} more energy. `;
+              }
+              if (account.energies.length > 0) {
+                msg += `You need ${account.energies.join(', ')} energ${account.energies.length === 1 ? 'y' : 'ies'}`;
+              }
+              return msg;
+            }
+          },
+          doit() {
+            const diceByLocation = splitDiceByLocation(that.selected);
+            const costs = calcPurchaseCosts(diceByLocation.card);
+            const account = accountDiceVsCosts(diceByLocation.reserve, costs);
+
+            if (account.tooMuch) {
+              if (!confirm(`You're spending ${-account.total} energ${account.total === -1 ? 'y' : 'ies'} more than required. Are you sure?`)) {
+                return;
+              }
+            }
+
+            that.$store.dispatch('deselect', {dice: that.selected});
+            that.$store.dispatch('doBuyDice', {diceToBuy: diceByLocation.card, diceToSpend: account.spent, diceToSpinDown: account.spinDown});
+          },
+        });
 
         moves.push({
           name: 'Field',
@@ -134,7 +187,7 @@ export default {
             }
 
             const costs = calcFieldingCosts(diceByType.character);
-            const account = accountDiceVsFieldingCosts(diceByType.energy, costs);
+            const account = accountDiceVsCosts(diceByType.energy, costs);
             if (!account.enough) {
               let msg = `You haven't covered the fielding costs: `;
               if (account.total > 0) {
@@ -149,7 +202,7 @@ export default {
           doit() {
             const diceByType = splitDiceByFaceType(that.selected);
             const costs = calcFieldingCosts(diceByType.character);
-            const account = accountDiceVsFieldingCosts(diceByType.energy, costs);
+            const account = accountDiceVsCosts(diceByType.energy, costs);
 
             if (account.tooMuch) {
               if (!confirm(`You're spending ${-account.total} energ${account.total === -1 ? 'y' : 'ies'} more than required. Are you sure?`)) {
@@ -174,23 +227,6 @@ export default {
                 });
               });
             }
-          },
-        });
-        
-        moves.push({
-          name: 'Buy',
-          desc: 'Buy dice from cards (select dice and the energy to buy them)',
-          precondition() {
-            if (!that.selected.length) {
-              return 'You need to select at least one die to buy';
-            }
-            if (!that.selected.every(die => die.owner !== 1-that.game.currentTurn)) {
-              return 'You can only field dice you own';
-            }
-          },
-          doit() {
-            that.$store.dispatch('doBuyDice');
-            // TODO: resolve effects in game.effectsToResolve
           },
         });
 

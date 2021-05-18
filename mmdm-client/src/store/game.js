@@ -2,6 +2,9 @@ import uxm from '../rulesets/uxm';
 import { makeActionDie, pickActionColour, makeCharacterDie, makeSidekickDie, findCard } from '../rulesets/util';
 
 
+// source for rules: http://dicecoalition.com/tiki/tiki-view_blog_post.php?postId=22
+
+
 const newPlayer = (num, local) => ({
   num,
   name: `player${num}`,
@@ -116,6 +119,16 @@ const actions = {
     commit('setRerolled');
   },
 
+  doBuyDice({commit, state}, {diceToBuy, diceToSpend, diceToSpinDown}) {
+    if (state.phase !== 'main') {
+      throw `trying to buy dice when in the ${state.phase} phase is forbidden!`;
+    }
+
+    diceToBuy.forEach(die => commit('buyDie', { playerNum: state.currentTurn, die }));
+    commit('moveAllDice', { source: 'reserve', dice:diceToSpend, dest: 'outOfPlay' });
+    diceToSpinDown.forEach(die => commit('spinDown', {die}));
+  },
+
   doField({commit, state}, {diceToField, diceToSpend, diceToSpinDown}) {
     if (state.phase !== 'main') {
       throw `trying to field characters when in the ${state.phase} phase is forbidden!`;
@@ -154,6 +167,12 @@ const actions = {
       throw `can't end turn while dice are still selected`;
     }
     
+    // move all unused actions to used
+    const unusedActions = state.players[state.currentTurn].reserve.filter(die => die.face.type === 'action');
+    commit('moveAllDice', { source: 'reserve', dice:unusedActions, dest: 'used' });
+
+    commit('moveAllDice', { source: 'outOfPlay', dest: 'used' });
+    
     commit('endTurn');
   },
 
@@ -191,7 +210,7 @@ const mutations = {
     const cardInstance = {...card, numDice, owner: playerNum, dice: []};
     cardInstance.die = makeCharacterDie(cardInstance);
     for (let i=0; i<numDice; ++i) {
-      cardInstance.dice.push({ ...cardInstance.die, uid: nextDiceUid++, card: cardInstance });
+      cardInstance.dice.push({ ...cardInstance.die, uid: nextDiceUid++, card: cardInstance, location: 'card' });
     }
     player.cards.push(cardInstance);
 
@@ -204,7 +223,7 @@ const mutations = {
     const cardInstance = {...card, numDice, tint: pickActionColour(state.actionCards), dice: []};
     cardInstance.die = makeActionDie(cardInstance);
     for (let i=0; i<numDice; ++i) {
-      cardInstance.dice.push({ ...cardInstance.die, uid: nextDiceUid++, card: cardInstance });
+      cardInstance.dice.push({ ...cardInstance.die, uid: nextDiceUid++, card: cardInstance, location: 'card' });
     }
     state.actionCards.push(cardInstance);
 
