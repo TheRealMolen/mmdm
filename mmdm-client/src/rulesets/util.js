@@ -14,7 +14,7 @@ export const makeSidekickDie = () => {
     { fg, bg, icon: 'prawn', field: 0, attack: 1, defense: 1, type: 'character' },
   ];
 
-  return { faces, type: 'sidekick' };
+  return { faces, type: 'sidekick', modifiers: [] };
 };
 
 
@@ -44,7 +44,7 @@ export const makeCharacterDie = (card, ruleset = null) => {
     faces.push(face);
   }
 
-  return { card, character:stats, faces, type: 'character' };
+  return { card, character:stats, faces, type: 'character', modifiers: [] };
 };
 
 
@@ -76,7 +76,7 @@ export const makeActionDie = (card) => {
     bursts += '*';
   }
 
-  return { card, faces, type: 'action' };
+  return { card, faces, type: 'action', modifiers: [] };
 };
 
 
@@ -204,3 +204,16 @@ export const accountDiceVsCosts = (dice, costs) => {
   return running;
 };
 
+
+export const getStatModDisplay = (die,stat,abbreviation) => {
+  const mods = die.modifiers.filter(mod => mod.stat === stat);
+  if (!mods.length) {
+    return undefined;
+  }
+  const sum = mods.reduce((acc,val) => { return acc + +val.amount;}, 0);
+  if (sum === 0) {
+    return undefined;
+  }
+  const sign = sum > 0 ? '+' : '-';
+  return `${sign}${sum}${abbreviation}`;
+};

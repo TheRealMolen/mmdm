@@ -303,6 +303,33 @@ export default {
             text: 'One of your characters gets +1A for each character your opponent has in the field.',
             cost: 3,
             max: 3,
+            precondition(game) {
+                if (game.selectedDice.length !== 2) {
+                    return 'You need to choose an action die and a character to target';
+                }
+                const actionDice = game.selectedDice.filter(die => die.face.type === 'action');
+                const targetDice = game.selectedDice.filter(die => die.face.type === 'character');
+                if (actionDice.length !== 1 || targetDice.length !== 1) {
+                    return 'You need to choose an action die and a character to target';
+                }
+                const actionDie = actionDice[0];
+                const targetDie = targetDice[0];
+                if (actionDie.owner !== game.currentTurn || targetDie.owner !== game.currentTurn ||
+                    (targetDie.location !== 'fielded' && targetDie.location !== 'attackers') ||
+                    actionDie.location !== 'reserve' ||
+                    targetDie.face.type !== 'character') {
+                    return 'You need to select the ambush die and one of your fielded character dice';
+                }
+            },
+            doit({game, commit}) {
+                const opponent = game.players[1-game.currentTurn];
+                const opponentDice = [...opponent.fielded, ...opponent.attackers];
+
+                const actionDice = game.selectedDice.filter(die => die.face.type === 'action');
+                const targetDice = game.selectedDice.filter(die => die.face.type === 'character');
+
+                commit('addModifier', {die:targetDice[0], stat: 'attack', amount: opponentDice.length, source: 'Ambush'});
+            },
         },
         {
             id: 26,

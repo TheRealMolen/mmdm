@@ -7,6 +7,6 @@ export default createStore({
     modules: {
       game,
     },
-    strict: false,
+    strict: true,
     plugins: [createLogger()],
   })

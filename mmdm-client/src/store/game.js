@@ -2,7 +2,10 @@ import uxm from '../rulesets/uxm';
 import { makeActionDie, pickActionColour, makeCharacterDie, makeSidekickDie, findCard } from '../rulesets/util';
 
 
-// source for rules: http://dicecoalition.com/tiki/tiki-view_blog_post.php?postId=22
+// source for rules: 
+//  pt 1: http://dicecoalition.com/tiki/tiki-view_blog_post.php?postId=14
+//  pt 2: http://dicecoalition.com/tiki/tiki-view_blog_post.php?postId=22
+//  pt 3: http://dicecoalition.com/tiki/tiki-view_blog_post.php?postId=85
 
 
 const newPlayer = (num, local) => ({
@@ -11,6 +14,7 @@ const newPlayer = (num, local) => ({
   local,
 
   cards: [],
+  ownedDice: {},
 
   health: -1,
 
@@ -210,7 +214,9 @@ const mutations = {
     const cardInstance = {...card, numDice, owner: playerNum, dice: []};
     cardInstance.die = makeCharacterDie(cardInstance);
     for (let i=0; i<numDice; ++i) {
-      cardInstance.dice.push({ ...cardInstance.die, uid: nextDiceUid++, card: cardInstance, location: 'card' });
+      const die = { ...cardInstance.die, uid: nextDiceUid++, card: cardInstance, location: 'card' };
+      roll(die);
+      cardInstance.dice.push(die);
     }
     player.cards.push(cardInstance);
 
@@ -223,7 +229,9 @@ const mutations = {
     const cardInstance = {...card, numDice, tint: pickActionColour(state.actionCards), dice: []};
     cardInstance.die = makeActionDie(cardInstance);
     for (let i=0; i<numDice; ++i) {
-      cardInstance.dice.push({ ...cardInstance.die, uid: nextDiceUid++, card: cardInstance, location: 'card' });
+      const die = { ...cardInstance.die, uid: nextDiceUid++, card: cardInstance, location: 'card' };
+      roll(die);
+      cardInstance.dice.push(die);
     }
     state.actionCards.push(cardInstance);
 
@@ -268,7 +276,8 @@ const mutations = {
 
   buyDie(state, {playerNum, die}) {
     const destName = 'used';
-    const dest = state.players[playerNum][destName];
+    const player = state.players[playerNum];
+    const dest = player[destName];
     const source = die.card.dice;
 
     if (typeof die.card.owner !== 'undefined' &&  die.card.owner !== playerNum) {
@@ -288,6 +297,7 @@ const mutations = {
     source.splice(sourceIx, 1);
 
     die.owner = playerNum;
+    player.ownedDice[die.uid] = die;
     die.location = destName;
     roll(die);
     dest.push(die);
@@ -339,6 +349,19 @@ const mutations = {
       throw 'Cannot spin down a die that has no single-energy sides!';
     }
     die.face = newFace;
+    die.modifiers.push({stat: 'spindown', amount: 1, source: 'spinDown'});
+  },
+
+
+  addModifier(state, {die, stat, amount, source}) {
+    die.modifiers.push({stat, amount, source});
+  },
+  resetModifiers(state) {
+    state.players.forEach(player => {
+      Object.values(player.ownedDice).forEach(die => {
+        die.modifiers = [];
+      });
+    });
   },
 
 
@@ -354,6 +377,7 @@ const mutations = {
     state.players.forEach((player,playerNum) => {
       player.health = startingHealth;
       player.cards = [];
+      player.ownedDice = {};
       
       player.bag = [];
       player.attackers = [];
@@ -366,10 +390,12 @@ const mutations = {
       // add 8 sidekicks to the bag
       for (let i=0; i<8; ++i) {
         const die = makeSidekickDie();
+        die.uid = nextDiceUid++;
         die.owner = playerNum;
         die.location = 'bag';
         roll(die);
         player.bag.push(die);
+        player.ownedDice[die.uid] = die;
       }
     });
 

@@ -11,16 +11,17 @@
     @click="onClick"
   >
     <inline-svg class="icon" :src="`/mmdm/assets/img/${icon}.svg`" :fill="fg" />
-    <div class="text tl">{{ field }}</div>
-    <div class="text tr">{{ attack }}</div>
-    <div class="text bl burst">{{ bursts }}</div>
-    <div class="text br">{{ defense }}</div>
+    <div class="text tl"><div v-if="fieldMod" class="modifier">{{fieldMod}}</div>{{ field }}&nbsp;</div>
+    <div class="text tr">&nbsp;{{ attack }} <div v-if="attackMod" class="modifier">{{attackMod}}</div></div>
+    <div class="text bl burst">{{ bursts }}&nbsp;</div>
+    <div class="text br">&nbsp;{{ defense }} <div v-if="defenseMod" class="modifier">{{defenseMod}}</div></div>
   </div>
 </template>
 
 <script>
 import InlineSvg from "vue-inline-svg";
 import Color from "color";
+import { getStatModDisplay } from '../rulesets/util';
 
 export default {
   components: {
@@ -47,11 +48,28 @@ export default {
     field() {
       return this.die.face.field;
     },
+    fieldMod() {
+      return getStatModDisplay(this.die, 'field', 'F');
+    },
     attack() {
       return this.die.face.attack;
     },
+    attackMod() {
+      return getStatModDisplay(this.die, 'attack', 'A');
+    },
     defense() {
       return this.die.face.defense;
+    },
+    defenseMod() {
+      const dMod = getStatModDisplay(this.die, 'defense', 'D');
+      const hpMod = getStatModDisplay(this.die, 'hp', 'hp');
+      if (dMod && hpMod) {
+        return `${dMod},${hpMod}`;
+      }
+      if (dMod) {
+        return dMod;
+      }
+      return hpMod;
     },
     bursts() {
       return this.die.face.bursts;
@@ -122,6 +140,13 @@ export default {
     height: 100%;
   }
 
+  .modifier {
+    position: absolute;
+    left: 0.6rem;
+    top: 0;
+    color: #222;
+  }
+
   .text {
     position: absolute;
     font-size: 0.8rem;
@@ -130,6 +155,11 @@ export default {
     &.tl {
       top: 0.2rem;
       left: 0.2rem;
+      
+      .modifier {
+        left: 0.6rem;
+        top: 0.1rem;
+      }
     }
     &.tr {
       top: 0.2rem;
@@ -158,6 +188,10 @@ export default {
     --shadow-blur: 0.2rem;
     --edge-thickness: 0.18rem;
     
+    .modifier {
+      left: 0.4rem;
+    }
+    
     &.selected {
       --shadow-offset: 0.35rem;
       --shadow-blur: 0.6rem;
@@ -174,10 +208,22 @@ export default {
       &.tl {
         top: 0.05rem;
         left: 0.13rem;
+      
+        .modifier {
+          right: 0.6rem;
+          top: 0;
+          left: unset;
+        }
       }
       &.tr {
         top: 0.05rem;
         right: 0.13rem;
+      
+        .modifier {
+          left: 0.5rem;
+          top: 0;
+          right: unset;
+        }
       }
       &.bl {
         bottom: 0;
@@ -186,6 +232,12 @@ export default {
       &.br {
         bottom: 0;
         right: 0.13rem;
+        
+        .modifier {
+          left: 0.5rem;
+          bottom: 0.1rem;
+          right: unset;
+        }
       }
 
       &.burst {

@@ -57,7 +57,6 @@ export default {
   methods: {
     computeSlots() {
       const rand = max => Math.random() * max;
-      const face = (die) => die.faces[Math.floor(rand(die.faces.length))];
       
       const spaces = [];
       spaces.push({ left: 14 + rand(12), top: 10 + rand(8) });
@@ -69,7 +68,6 @@ export default {
       const slots = {};
       dice.forEach((die,ix) => {
         slots[die.uid] = {...spaces[ix], angle: -90 + rand(180)};
-        die.face = face(die);
       });
 
       return slots;

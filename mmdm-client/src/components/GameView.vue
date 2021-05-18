@@ -72,17 +72,14 @@ export default {
     },
 
     moves() {
-      // TODO: gather moves
-      const that = this;
-
       const phase = this.game.phase;
       if (phase === 'roll') {
         return [
           {
             name: "Roll",
             desc: "Take four dice from your bag, refilling if needed, and roll them along with any dice in your prep area",
-            doit() {
-              that.$store.dispatch('doRollPhase');
+            doit({dispatch}) {
+              dispatch('doRollPhase');
             }
           }
         ];
@@ -91,50 +88,54 @@ export default {
       if (phase === 'main') {
         const moves = [];
 
-        if (!this.game.rerolled) {
-          moves.push({
-            name: 'Reroll',
-            desc: 'Reroll any number of rolled dice (you can only do this once per turn)',
-            precondition() {
-              if (!that.selected.length) {
-                return 'You need to select at least one die to reroll';
-              }
-              if (that.selected.some(die => die.owner !== that.game.currentTurn)) {
-                return 'You can only reroll dice you own';
-              }
-              if (that.selected.some(die => die.location !== 'reserve')) {
-                return 'You can only reroll dice in your reserve';
-              }
-            },
-            doit() {
-              const dice = [...that.selected];
-              that.$store.dispatch('deselect', {dice});
-              that.$store.dispatch('doReroll', {dice});
-            },
-          });
-        }
+        moves.push({
+          name: 'Reroll',
+          desc: 'Reroll any number of rolled dice (you can only do this once per turn)',
+          precondition(game) {
+            if (game.rerolled) {
+              return 'You can only reroll one time per turn';
+            }
+            if (!game.selectedDice.length) {
+              return 'You need to select at least one die to reroll';
+            }
+            if (game.selectedDice.some(die => die.owner !== game.currentTurn)) {
+              return 'You can only reroll dice you own';
+            }
+            if (game.selectedDice.some(die => die.location !== 'reserve')) {
+              return 'You can only reroll dice in your reserve';
+            }
+            if (game.selectedDice.some(die => die.modifiers.findIndex(mod => mod.stat === 'spindown') >= 0)) {
+              return `You cannot reroll dice whose energy you've partially spent`;
+            }
+          },
+          doit({game, dispatch}) {
+            const dice = [...game.selectedDice];
+            dispatch('deselect', {dice});
+            dispatch('doReroll', {dice});
+          },
+        });
         
         moves.push({
           name: 'Buy',
           desc: 'Buy dice from cards (select dice and the energy to buy them)',
-          precondition() {
-            if (!that.selected.length) {
+          precondition(game) {
+            if (!game.selectedDice.length) {
               return 'You need to select at least one die to buy';
             }
-            const diceByLocation = splitDiceByLocation(that.selected);
+            const diceByLocation = splitDiceByLocation(game.selectedDice);
             if (diceByLocation.card.length === 0) {
               return 'You need to select some dice to buy';
             }
-            if (!diceByLocation.card.every(die => die.card.owner !== 1-that.game.currentTurn)) {
+            if (!diceByLocation.card.every(die => die.card.owner !== 1-game.currentTurn)) {
               return 'You can only buy dice from your own cards or from action cards';
             }
-            if (!diceByLocation.reserve.every(die => die.owner === that.game.currentTurn)) {
+            if (!diceByLocation.reserve.every(die => die.owner === game.currentTurn)) {
               return 'You can only buy dice using energy you own';
             }
             if (!diceByLocation.reserve.every(die => die.face.type === 'energy')) {
               return 'You can only buy dice using energy';
             }
-            if (diceByLocation.card.length + diceByLocation.reserve.length !== that.selected.length) {
+            if (diceByLocation.card.length + diceByLocation.reserve.length !== game.selectedDice.length) {
               return 'You can only buy dice with dice in your reserve';
             }
 
@@ -151,8 +152,8 @@ export default {
               return msg;
             }
           },
-          doit() {
-            const diceByLocation = splitDiceByLocation(that.selected);
+          doit({game, dispatch}) {
+            const diceByLocation = splitDiceByLocation(game.selectedDice);
             const costs = calcPurchaseCosts(diceByLocation.card);
             const account = accountDiceVsCosts(diceByLocation.reserve, costs);
 
@@ -162,26 +163,26 @@ export default {
               }
             }
 
-            that.$store.dispatch('deselect', {dice: that.selected});
-            that.$store.dispatch('doBuyDice', {diceToBuy: diceByLocation.card, diceToSpend: account.spent, diceToSpinDown: account.spinDown});
+            dispatch('deselect', {dice: game.selectedDice});
+            dispatch('doBuyDice', {diceToBuy: diceByLocation.card, diceToSpend: account.spent, diceToSpinDown: account.spinDown});
           },
         });
 
         moves.push({
           name: 'Field',
           desc: 'Send characters to the field (select characters and the energy to field them)',
-          precondition() {
-            if (!that.selected.length) {
+          precondition(game) {
+            if (!game.selectedDice.length) {
               return 'You need to select at least one die to field';
             }
-            if (!that.selected.every(die => die.owner === that.game.currentTurn)) {
+            if (!game.selectedDice.every(die => die.owner === game.currentTurn)) {
               return 'You can only field dice you own';
             }
-            if (!that.selected.every(die => die.location === 'reserve')) {
+            if (!game.selectedDice.every(die => die.location === 'reserve')) {
               return 'You can only field dice in your reserve';
             }
             
-            const diceByType = splitDiceByFaceType(that.selected);
+            const diceByType = splitDiceByFaceType(game.selectedDice);
             if (diceByType.character.length === 0) {
               return 'You need to select some characters to field';
             }
@@ -199,8 +200,8 @@ export default {
               return msg;
             }
           },
-          doit() {
-            const diceByType = splitDiceByFaceType(that.selected);
+          doit({game, gameui, dispatch}) {
+            const diceByType = splitDiceByFaceType(game.selectedDice);
             const costs = calcFieldingCosts(diceByType.character);
             const account = accountDiceVsCosts(diceByType.energy, costs);
 
@@ -210,24 +211,39 @@ export default {
               }
             }
 
-            that.$store.dispatch('deselect', {dice: that.selected});
-            that.$store.dispatch('doField', {diceToField: diceByType.character, diceToSpend: account.spent, diceToSpinDown: account.spinDown});
+            dispatch('deselect', {dice: game.selectedDice});
+            dispatch('doField', {diceToField: diceByType.character, diceToSpend: account.spent, diceToSpinDown: account.spinDown});
             
             // resolve effects
-            if (that.game.effectsToResolve.length > 0) {
-              that.resolving = true;
-              that.$nextTick(() => {
-                const promiseChain = that.game.effectsToResolve.reduce((promiseChain, effect) => {
+            if (game.effectsToResolve.length > 0) {
+              gameui.resolving = true;
+              gameui.$nextTick(() => {
+                const promiseChain = game.effectsToResolve.reduce((promiseChain, effect) => {
                   return promiseChain.then(effect.die.card[effect.effect].resolve(effect.die));
                 }, Promise.resolve());
                 promiseChain.catch(err => alert(err));
                 promiseChain.finally((resolve, reject) => {
-                  that.$store.dispatch('clearResolvedEffects');
-                  that.resolving = false;
+                  dispatch('clearResolvedEffects');
+                  gameui.resolving = false;
                 });
               });
             }
           },
+        });
+
+        this.selected.forEach(die => {
+          if (die.face.type === 'action') {
+            moves.push({
+              name: die.card.name,
+              desc: die.card.text,
+              precondition: die.card.precondition,
+              doit: payload => {
+                die.card.doit(payload);  
+                payload.dispatch('deselect', {dice: payload.game.selectedDice});              
+                payload.commit('moveAllDice', {source:'reserve', dice:[die], dest:'outOfPlay'});
+              },
+            });
+          }
         });
 
         this.game.globals.forEach(card => {
@@ -240,9 +256,9 @@ export default {
         moves.push({
           name: 'Start Attack',
           desc: 'Move to the Attack phase',
-          doit() {
-            that.$store.dispatch('deselect', {dice: that.selected});
-            that.$store.dispatch('startAttack');
+          doit({game, dispatch}) {
+            dispatch('deselect', {dice: game.selectedDice});
+            dispatch('startAttack');
           },
         });
 
@@ -254,9 +270,9 @@ export default {
 
         moves.push({
           name: 'End Turn',
-          doit() {
-            that.$store.dispatch('deselect', {dice: that.selected});
-            that.$store.dispatch('finishTurn');
+          doit({game, dispatch}) {
+            dispatch('deselect', {dice: game.selectedDice});
+            dispatch('finishTurn');
           },
         });
 
@@ -270,19 +286,19 @@ export default {
   methods: {
     attempt(move) {
       if (move.precondition) {
-        const err = move.precondition();
+        const err = move.precondition(this.game);
         if (err) {
           alert(err);
           return;
         }
       }
 
-      move.doit();
+      move.doit({game: this.game, dispatch: this.$store.dispatch, commit: this.$store.commit, gameui: this});
     },
 
     buttonStyle(move) {
       if (move.precondition) {
-        const err = move.precondition();
+        const err = move.precondition(this.game);
         if (err) {
           return 'btn-secondary';
         }
@@ -292,7 +308,7 @@ export default {
     buttonTooltip(move) {
       let msg = move.desc;
       if (move.precondition) {
-        const err = move.precondition();
+        const err = move.precondition(this.game);
         if (err) {
           msg += '\n\n' + err;
         }
