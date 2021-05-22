@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex position-relative">
-    <div class="card" :class="size" :style="imageUrlVar" :title="card.text + (card.globaltext ? '\n\nGlobal: ' + card.globaltext : '')"></div>
+    <div class="card" :class="size" :style="imageUrlVar" :title="card.text + (card.global ? '\n\nGlobal: ' + card.global.text : '')"></div>
     <div v-for="die in card.dice" :key="die.uid" class="position-absolute" :style="{left:slots[die.uid].left+'%', top:slots[die.uid].top+'%'}">
       <die class="mb-1"
         :size="size"

@@ -31,6 +31,7 @@ export default {
   width: 4.5rem;
   height: 4.5rem;
   padding-top: 0.3rem;
+  z-index: 10;
 
   &.small {
     width: 2.7rem;

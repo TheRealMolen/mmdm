@@ -3,13 +3,13 @@
     <div class="attack area">
       ATTACK
       <div class="overlay">
-        <dice-area size="small" :dice="player.attackers" />
+        <dice-area size="small" :dice="player.attack" />
       </div>
     </div>
     <div class="field area">
       FIELD
       <div class="overlay">
-        <dice-area size="small" :dice="player.fielded" />
+        <dice-area size="small" :dice="player.field" />
       </div>
     </div>
     <div class="used area">
@@ -117,6 +117,10 @@ export default {
   .attack {
     grid-area: attack;
     background-color: #E68E83;
+
+    .overlay {
+      padding: 0;
+    }
   }
   .used {
     grid-area: used;

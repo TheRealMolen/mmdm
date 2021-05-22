@@ -14,7 +14,7 @@ export const makeSidekickDie = () => {
     { fg, bg, icon: 'prawn', field: 0, attack: 1, defense: 1, type: 'character' },
   ];
 
-  return { faces, type: 'sidekick', modifiers: [] };
+  return { faces, type: 'sidekick', ko: false, modifiers: [] };
 };
 
 
@@ -44,7 +44,7 @@ export const makeCharacterDie = (card, ruleset = null) => {
     faces.push(face);
   }
 
-  return { card, character:stats, faces, type: 'character', modifiers: [] };
+  return { card, character:stats, faces, type: 'character', ko: false, modifiers: [] };
 };
 
 
@@ -102,7 +102,7 @@ export const splitDiceByFaceType = dice => {
   return split;
 };
 export const splitDiceByLocation = dice => {
-  const split = { card: [], bag: [], reserve: [], fielded: [], attackers:[], prep: [], outOfPlay: [] };
+  const split = { card: [], bag: [], reserve: [], field: [], attack:[], prep: [], outOfPlay: [] };
   dice.forEach(die => split[die.location].push(die));
   return split;
 };
@@ -204,6 +204,15 @@ export const accountDiceVsCosts = (dice, costs) => {
   return running;
 };
 
+
+export const getStatModAmount = (die,stat) => {
+  const mods = die.modifiers.filter(mod => mod.stat === stat);
+  if (!mods.length) {
+    return 0;
+  }
+  const sum = mods.reduce((acc,val) => { return acc + +val.amount;}, 0);
+  return sum;
+};
 
 export const getStatModDisplay = (die,stat,abbreviation) => {
   const mods = die.modifiers.filter(mod => mod.stat === stat);

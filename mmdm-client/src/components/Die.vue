@@ -1,7 +1,7 @@
 <template>
   <div
     class="die"
-    :class="[size, selected?'selected':'']"
+    :class="[size, selected?'selected':'', outOfPlay?'outOfPlay':'']"
     :style="{
       color: fg,
       background: bg,
@@ -79,6 +79,10 @@ export default {
       return typeof this.die.selected !== 'undefined' && this.die.selected === true;
     },
 
+    outOfPlay() {
+      return typeof this.die.location !== 'undefined' && this.die.location === 'outOfPlay';
+    },
+
     outlineCol() {
       return Color(this.bg).saturate(1.8).darken(0.75);
     },
@@ -91,6 +95,9 @@ export default {
 
   methods: {
     onClick() {
+      if (this.die.location === 'outOfPlay') {
+        return;
+      }
       this.$store.dispatch('dieClicked', { die: this.die });
     },
   },
@@ -128,7 +135,7 @@ export default {
     --shadow-blur: 0.7rem;
   }
 
-  &:hover {
+  &:not(.outOfPlay):hover {
     --shadow-offset: 0.5rem;
     --shadow-blur: 0.5rem;
     cursor: grab;
@@ -145,12 +152,14 @@ export default {
     left: 0.6rem;
     top: 0;
     color: #222;
+    user-select: none;
   }
 
   .text {
     position: absolute;
     font-size: 0.8rem;
     font-weight: bold;
+    user-select: none;
 
     &.tl {
       top: 0.2rem;
@@ -197,7 +206,7 @@ export default {
       --shadow-blur: 0.6rem;
     }
 
-    &:hover {
+    &:not(.outOfPlay):hover {
       --shadow-offset: 0.3rem;
       --shadow-blur: 0.45rem;
     }

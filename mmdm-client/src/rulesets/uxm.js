@@ -315,7 +315,7 @@ export default {
                 const actionDie = actionDice[0];
                 const targetDie = targetDice[0];
                 if (actionDie.owner !== game.currentTurn || targetDie.owner !== game.currentTurn ||
-                    (targetDie.location !== 'fielded' && targetDie.location !== 'attackers') ||
+                    (targetDie.location !== 'field' && targetDie.location !== 'attack') ||
                     actionDie.location !== 'reserve' ||
                     targetDie.face.type !== 'character') {
                     return 'You need to select the ambush die and one of your fielded character dice';
@@ -323,7 +323,7 @@ export default {
             },
             doit({game, commit}) {
                 const opponent = game.players[1-game.currentTurn];
-                const opponentDice = [...opponent.fielded, ...opponent.attackers];
+                const opponentDice = [...opponent.field, ...opponent.attack];
 
                 const actionDice = game.selectedDice.filter(die => die.face.type === 'action');
                 const targetDice = game.selectedDice.filter(die => die.face.type === 'character');
@@ -336,9 +336,31 @@ export default {
             action: true,
             name: 'Enrage',
             text: 'Choose a character. That character must attack at its next opportunity. Spin that character up one level (if able).',
-            globaltext: 'Pay <zap>. Give one character +1A.',
             cost: 3,
             max: 3,
+            global: {
+                text: 'Pay <zap>. Give one character +1A.',
+                phase: 'attack',
+                precondition(game) {
+                    const targetDice = game.selectedDice.filter(die => die.face.type === 'character');
+                    const energyDice = game.selectedDice.filter(die => die.face.type === 'energy' && (die.face.icon === 'zap' || die.face.icon === 'wild'));
+                    if (targetDice.length !== 1) {
+                        return 'You need to pick one character to enrage';
+                    }
+                    if (energyDice.length === 0) {
+                        return 'You need to pay with <zap> energy';
+                    }
+                    if (targetDice.length + energyDice.length !== game.selectedDice.length) {
+                        return 'You can only use <zap> or <wild> energy to pay to Enrage';
+                    }
+                },
+                doit({game, commit}) {
+                    const targetDie = game.selectedDice.filter(die => die.face.type === 'character')[0];
+                    const energyDice = game.selectedDice.filter(die => die.face.type === 'energy' && (die.face.icon === 'zap' || die.face.icon === 'wild'));
+                    commit('addModifier', {die:targetDie, stat:'attack', amount:energyDice.length, source:'Enrage'});
+                    commit('moveAllDice', {source:'reserve', dice:energyDice, dest:'outOfPlay'});
+                },
+            },
         },
         {
             id: 27,
@@ -371,6 +393,26 @@ export default {
             text: 'Deal 1 damage to each character (including yours).\n<burst> Instead, deal 1 damage to each player.\n<burst><burst> Instead, deal 1 damage to each player and 1 damage to each character.',
             cost: 3,
             max: 3,
+            precondition(game) {
+                if (game.selectedDice.length !== 1) {
+                    return 'You can only recklessly melee one die at a time 😅';
+                }
+            },
+            doit({game, commit}) {
+                const bursts = game.selectedDice[0].face.bursts;
+                game.players.forEach(player => {
+                    if (bursts === 0 || bursts === 2) {
+                        const eligibleDice = [...player.attack, ...player.field];
+                        eligibleDice.forEach(die => {
+                            commit('damageDie', {die, amount:1, source: 'Reckless Melee'});
+                        });
+                    }
+
+                    if (bursts === 1 || bursts === 2) {
+                        commit('damagePlayer', {playerNum:player.playerNum, amount:1, source: 'Reckless Melee'});
+                    }
+                });
+            },
         },
         {
             id: 31,

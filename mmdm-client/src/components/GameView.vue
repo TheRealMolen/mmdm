@@ -28,17 +28,14 @@
       <div class="col-7 play-area d-flex flex-column">
         <play-area :player="players[1]" :invert="true" class="mb-3" />
 
+        <div class="mb-3 action-area d-flex justify-content-center" v-if="!resolving">
+          <div v-for="(move,moveIx) in moves" :key="moveIx" class="me-2">
+            <button type="button" class="btn" :class="buttonStyle(move)" :title="buttonTooltip(move)" @click="attempt(move)">{{ move.name }}</button>
+          </div>
+        </div>
+
         <play-area :player="players[0]" class="mb-3" @die-clicked="console.log($event)" />
       </div>
-    </div>
-
-    <div class="row mt-3">
-      <div class="col action-area d-flex justify-content-center" v-if="!resolving">
-        <div v-for="(move,moveIx) in moves" :key="moveIx" class="me-2">
-          <button type="button" class="btn" :class="buttonStyle(move)" :title="buttonTooltip(move)" @click="attempt(move)">{{ move.name }}</button>
-        </div>
-      </div>
-
     </div>
   </div>
 </template>
@@ -247,16 +244,32 @@ export default {
         });
 
         this.game.globals.forEach(card => {
+          if (typeof card.global.phase !== 'undefined' && phase !== card.global.phase) {
+            return;
+          }
+
           moves.push({
-            name: `Global: ${card.name}`,
-            desc: card.globaltext,
+            name: card.name,
+            desc: card.global.text,
+            precondition: card.global.precondition,
+            doit: payload => {
+              card.global.doit(payload);  
+              payload.dispatch('deselect', {dice: payload.game.selectedDice});              
+            },
           });
         });
         
         moves.push({
-          name: 'Start Attack',
+          name: 'Start Attack Phase',
           desc: 'Move to the Attack phase',
           doit({game, dispatch}) {
+            // TODO: check that the remaining characters are fieldable
+            if (game.players[game.currentTurn].reserve.some(die => die.face.type === 'character')) {
+              if (!confirm('You haven\'t fielded all of your characters -- are you sure you want to move to the attack phase?')) {
+                return;
+              }
+            }
+
             dispatch('deselect', {dice: game.selectedDice});
             dispatch('startAttack');
           },
@@ -267,12 +280,46 @@ export default {
 
       if (phase === 'attack') {
         const moves = [];
+        
+        moves.push({
+          name: 'Attack',
+          desc: 'Move characters from the field to attack',
+          precondition(game) {
+            if (game.selectedDice.length === 0) {
+              return 'You need to select some characters to attack with';
+            }
+            if (!game.selectedDice.every(die => die.location === 'field')) {
+              return 'You can only attack with characters in the field';
+            }
+          },
+          doit({game, dispatch, commit}) {
+            commit('moveAllDice', {source: 'field', dice: [...game.selectedDice], dest: 'attack'})
+            dispatch('deselect', {dice: game.selectedDice});
+          },
+        });
+
+        this.game.globals.forEach(card => {
+          if (typeof card.global.phase !== 'undefined' && phase !== card.global.phase) {
+            return;
+          }
+          
+          moves.push({
+            name: card.name,
+            desc: card.global.text,
+            precondition: card.global.precondition,
+            doit: payload => {
+              card.global.doit(payload);  
+              payload.dispatch('deselect', {dice: payload.game.selectedDice});              
+            },
+          });
+        });
 
         moves.push({
           name: 'End Turn',
           doit({game, dispatch}) {
             dispatch('deselect', {dice: game.selectedDice});
             dispatch('finishTurn');
+            dispatch('doTurnStart');
           },
         });
 

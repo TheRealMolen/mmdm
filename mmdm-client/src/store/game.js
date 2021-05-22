@@ -1,4 +1,5 @@
 import uxm from '../rulesets/uxm';
+import { getStatModAmount } from '../rulesets/util';
 import { makeActionDie, pickActionColour, makeCharacterDie, makeSidekickDie, findCard } from '../rulesets/util';
 
 
@@ -17,11 +18,12 @@ const newPlayer = (num, local) => ({
   ownedDice: {},
 
   health: -1,
+  damageHistory: [],
 
   // all of our dices!
   bag: [],
-  attackers: [],
-  fielded: [],
+  attack: [],
+  field: [],
   reserve: [],
   prep: [],
   outOfPlay: [],
@@ -86,11 +88,13 @@ const actions = {
 
 
   // ------------- p h a s e s --------------
-  doRollPhase({commit, state}) {
-    const player = state.players[state.currentTurn];
-
+  doTurnStart({commit, state}) {
     commit('moveAllDice', { source:'reserve', dest: 'used' });
     commit('moveAllDice', { source:'outOfPlay', dest: 'used' });
+  },
+
+  doRollPhase({commit, state}) {
+    const player = state.players[state.currentTurn];
 
     for (let i=0; i<4; ++i) {
       if (player.bag.length === 0) {
@@ -144,7 +148,7 @@ const actions = {
       }
     });
 
-    commit('moveAllDice', { source: 'reserve', dice:diceToField, dest: 'fielded' });
+    commit('moveAllDice', { source: 'reserve', dice:diceToField, dest: 'field' });
     commit('moveAllDice', { source: 'reserve', dice:diceToSpend, dest: 'outOfPlay' });
     diceToSpinDown.forEach(die => commit('spinDown', {die}));
   },
@@ -170,6 +174,17 @@ const actions = {
     if (state.selectedDice.length > 0) {
       throw `can't end turn while dice are still selected`;
     }
+
+    // move all combatants appropriately
+    state.players.forEach(player => {
+      const koFielded = player.field.filter(die => die.ko);
+      commit('moveAllDice', { source: 'field', dice: koFielded, dest: 'prep' });
+      const koAttackers = player.attack.filter(die => die.ko);
+      commit('moveAllDice', { source: 'attack', dice: koAttackers, dest: 'prep' });
+
+      // anyone who damaged the opponent will already have been moved, so the remaining dice will have been blocked
+      commit('moveAllDice', { source: 'attack', dest: 'field' });
+    });
     
     // move all unused actions to used
     const unusedActions = state.players[state.currentTurn].reserve.filter(die => die.face.type === 'action');
@@ -220,7 +235,7 @@ const mutations = {
     }
     player.cards.push(cardInstance);
 
-    if (cardInstance.globaltext) {
+    if (cardInstance.global) {
       state.globals.push(cardInstance);
     }
   },
@@ -235,7 +250,7 @@ const mutations = {
     }
     state.actionCards.push(cardInstance);
 
-    if (cardInstance.globaltext) {
+    if (cardInstance.global) {
       state.globals.push(cardInstance);
     }
   },
@@ -248,6 +263,13 @@ const mutations = {
     state.currentTurn = 1 - state.currentTurn;
     state.phase = 'roll';
     state.rerolled = false;
+
+    state.players.forEach(player => {
+      Object.values(player.ownedDice).forEach(die => {
+        die.modifiers = [];
+        die.ko = false;
+      });
+    });
   },
   setRerolled(state) {
     state.rerolled = true;
@@ -365,6 +387,29 @@ const mutations = {
   },
 
 
+  damageDie(state, {die, amount, source}) {
+    const defense = die.face.defense + getStatModAmount(die, 'defense') + getStatModAmount(die, 'hp');
+    if (defense - amount > 0) {
+      die.modifiers.push({stat: 'hp', amount: -amount, source});
+    }
+    else {
+      die.ko = true;
+    }
+  },
+  damagePlayer(state, {playerNum, amount, source}) {
+    const player = state.players[playerNum];
+    player.damageHistory.push({amount, source});
+    player.health -= amount;
+
+    if (player.health <= 0) {
+      if (!state.finished) {
+        state.finished = true;
+        state.winner = 1-playerNum;
+      }
+    }
+  },
+
+
   addEffectToResolve(state, {die, effect}) {
     state.effectsToResolve.push({ die, effect });
   },
@@ -374,14 +419,18 @@ const mutations = {
 
 
   resetGame(state, {startingHealth}) {
+    state.finished = false;
+    state.winner = -1;
+
     state.players.forEach((player,playerNum) => {
       player.health = startingHealth;
+      player.damageHistory = [];
       player.cards = [];
       player.ownedDice = {};
       
       player.bag = [];
-      player.attackers = [];
-      player.fielded = [];
+      player.attack = [];
+      player.field = [];
       player.reserve = [];
       player.prep = [];
       player.outOfPlay = [];
