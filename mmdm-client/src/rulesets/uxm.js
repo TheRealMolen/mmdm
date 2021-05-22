@@ -343,7 +343,10 @@ export default {
                 phase: 'attack',
                 precondition(game) {
                     const targetDice = game.selectedDice.filter(die => die.face.type === 'character');
-                    const energyDice = game.selectedDice.filter(die => die.face.type === 'energy' && (die.face.icon === 'zap' || die.face.icon === 'wild'));
+                    const energyDice = game.selectedDice
+                        .filter(die => die.face.type === 'energy')
+                        .filter(die => (die.face.icon === 'zap' || die.face.icon === 'wild'))
+                        .filter(die => die.owner === game.currentTurn);
                     if (targetDice.length !== 1) {
                         return 'You need to pick one character to enrage';
                     }

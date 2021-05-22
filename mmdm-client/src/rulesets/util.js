@@ -102,7 +102,7 @@ export const splitDiceByFaceType = dice => {
   return split;
 };
 export const splitDiceByLocation = dice => {
-  const split = { card: [], bag: [], reserve: [], field: [], attack:[], prep: [], outOfPlay: [] };
+  const split = { card: [], bag: [], reserve: [], field: [], attack:[], prep: [], used: [], outOfPlay: [] };
   dice.forEach(die => split[die.location].push(die));
   return split;
 };
