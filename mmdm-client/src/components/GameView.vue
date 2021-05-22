@@ -262,6 +262,11 @@ export default {
         moves.push({
           name: 'Start Attack Phase',
           desc: 'Move to the Attack phase',
+          precondition(game) {
+            if (game.selectedDice.length !== 0) {
+              return 'You need to deselect all your dice before moving to the attack phase';
+            }
+          },
           doit({game, dispatch}) {
             // TODO: check that the remaining characters are fieldable
             if (game.players[game.currentTurn].reserve.some(die => die.face.type === 'character')) {
@@ -316,6 +321,11 @@ export default {
 
         moves.push({
           name: 'End Turn',
+          precondition(game) {
+            if (game.selectedDice.length !== 0) {
+              return 'You need to deselect all your dice before finishing your turn';
+            }
+          },
           doit({game, dispatch}) {
             dispatch('deselect', {dice: game.selectedDice});
             dispatch('finishTurn');
