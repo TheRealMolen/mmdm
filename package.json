@@ -1,8 +1,22 @@
 {
-  "name": "mmdm",
-  "version": "0.0.0",
+  "name": "mmdm-server",
+  "version": "1.0.0",
+  "description": "server for molen's marvellous dice masters",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "author": "alex mole",
+  "license": "ISC",
   "dependencies": {
+    "bufferutil": "^4.0.3",
+    "express": "^4.17.1",
+    "utf-8-validate": "^5.0.5",
+    "ws": "^7.4.5"
+  },
+  "engines": {
+    "node": "14.16.x"
   }
 }
