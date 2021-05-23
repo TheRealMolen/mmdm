@@ -13,5 +13,6 @@ export default defineConfig({
         /^img\/.*/
       ],
     },
+    outDir: '../mmdm-server/static/mmdm',
   },
 })
