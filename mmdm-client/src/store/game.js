@@ -1,7 +1,7 @@
 import uxm from '../rulesets/uxm';
 import { getStatModAmount } from '../rulesets/util';
 import { makeActionDie, pickActionColour, makeCharacterDie, makeSidekickDie, findCard } from '../rulesets/util';
-
+import { joinGame } from '../sync';
 
 // source for rules: 
 //  pt 1: http://dicecoalition.com/tiki/tiki-view_blog_post.php?postId=14
@@ -45,6 +45,7 @@ const roll = die => {
 //      |___/\__\__,_|\__\___|
 //
 const state = () => ({
+  gameid: null,
   players: [newPlayer(0, true), newPlayer(1, false)],
   actionCards: [],
   globals: [],
@@ -56,7 +57,8 @@ const state = () => ({
   effectsToResolve: [],
 });
 
-
+let sync = null;
+let nextGameId = 1;
 
 //               _   _                 
 //              | | (_)                
@@ -67,6 +69,10 @@ const state = () => ({
 //
 const actions = {
   setupStarterGame({ commit, state }) {
+    const gameid = `sg${nextGameId}`;
+    ++nextGameId;
+    sync = joinGame(gameid, newState => console.log(newState));
+
     commit('resetGame', {startingHealth: 10});
 
     commit('addCardToPlayer', {playerNum:0, card:findCard('Sprite', 'KittyPryde'), numDice:2});

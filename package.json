@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon server.js",
+    "client": "cd mmdm-client && npm run dev"
   },
   "author": "alex mole",
   "license": "ISC",
@@ -18,5 +19,8 @@
   },
   "engines": {
     "node": "14.16.x"
+  },
+  "nodemonConfig": {
+    "ignore": ["mmdm-client/*", "static/*"]
   }
 }
