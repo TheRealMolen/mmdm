@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "client": "cd mmdm-client && npm run dev"
+    "client": "cd mmdm-client && npm run dev",
+    "publish": "git push heroku main"
   },
   "author": "alex mole",
   "license": "ISC",
