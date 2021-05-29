@@ -22,6 +22,9 @@
     "node": "14.16.x"
   },
   "nodemonConfig": {
-    "ignore": ["mmdm-client/*", "static/*"]
+    "ignore": [
+      "mmdm-client/*",
+      "static/*"
+    ]
   }
 }

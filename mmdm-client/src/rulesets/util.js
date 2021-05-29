@@ -14,7 +14,7 @@ export const makeSidekickDie = () => {
     { fg, bg, icon: 'prawn', field: 0, attack: 1, defense: 1, type: 'character' },
   ];
 
-  return { faces, type: 'sidekick', ko: false, modifiers: [] };
+  return { faces, type: 'sidekick', ko: false };
 };
 
 
@@ -44,7 +44,7 @@ export const makeCharacterDie = (card, ruleset = null) => {
     faces.push(face);
   }
 
-  return { card, character:stats, faces, type: 'character', ko: false, modifiers: [] };
+  return { card, character:stats, faces, type: 'character', ko: false };
 };
 
 
@@ -76,7 +76,7 @@ export const makeActionDie = (card) => {
     bursts += '*';
   }
 
-  return { card, faces, type: 'action', modifiers: [] };
+  return { card, faces, type: 'action' };
 };
 
 

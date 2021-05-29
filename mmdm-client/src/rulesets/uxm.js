@@ -345,7 +345,7 @@ export default {
                     const targetDice = game.selectedDice.filter(die => die.face.type === 'character');
                     const energyDice = game.selectedDice
                         .filter(die => die.face.type === 'energy')
-                        .filter(die => (die.face.icon === 'zap' || die.face.icon === 'wild'))
+                        .filter(die => (die.face.icon.startsWith('zap') || die.face.icon === 'wild'))
                         .filter(die => die.owner === game.currentTurn);
                     if (targetDice.length !== 1) {
                         return 'You need to pick one character to enrage';
@@ -359,9 +359,15 @@ export default {
                 },
                 doit({game, commit}) {
                     const targetDie = game.selectedDice.filter(die => die.face.type === 'character')[0];
-                    const energyDice = game.selectedDice.filter(die => die.face.type === 'energy' && (die.face.icon === 'zap' || die.face.icon === 'wild'));
+                    const energyDice = game.selectedDice.filter(die => die.face.type === 'energy');
                     commit('addModifier', {die:targetDie, stat:'attack', amount:energyDice.length, source:'Enrage'});
-                    commit('moveAllDice', {source:'reserve', dice:energyDice, dest:'outOfPlay'});
+                    
+                    // assume that any zapx2 should be spun down rather than fully used
+                    const usedDice = energyDice.filter(die => !die.face.icon.endsWith('x2'));
+                    commit('moveAllDice', {source:'reserve', dice:usedDice, dest:'outOfPlay'});
+
+                    const diceToSpinDown = energyDice.filter(die => die.face.icon.endsWith('x2'));                    
+                    diceToSpinDown.forEach(die => commit('spinDown', {die}));
                 },
             },
         },

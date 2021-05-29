@@ -85,11 +85,11 @@ const actions = {
     commit('addActionCard', {card:findCard('Reckless Melee'), numDice:3});
 
     // --  testing  ------
-    // commit('buyDie', { playerNum:0, die: state.players[0].cards[0].dice[1] });
-    // commit('buyDie', { playerNum:0, die: state.players[0].cards[0].dice[0] });
-    // commit('buyDie', { playerNum:0, die: state.players[0].cards[1].dice[1] });
-    // commit('buyDie', { playerNum:0, die: state.players[0].cards[1].dice[0] });
-    // commit('moveAllDice', { source:'used', dest: 'prep' });
+    commit('buyDie', { playerNum:0, die: state.players[0].cards[0].dice[1] });
+    commit('buyDie', { playerNum:0, die: state.players[0].cards[0].dice[0] });
+    commit('buyDie', { playerNum:0, die: state.players[0].cards[1].dice[1] });
+    commit('buyDie', { playerNum:0, die: state.players[0].cards[1].dice[0] });
+    commit('moveAllDice', { source:'used', dest: 'prep' });
   },
 
 
@@ -236,6 +236,7 @@ const mutations = {
     cardInstance.die = makeCharacterDie(cardInstance);
     for (let i=0; i<numDice; ++i) {
       const die = { ...cardInstance.die, uid: nextDiceUid++, card: cardInstance, location: 'card' };
+      die.modifiers = [];
       roll(die);
       cardInstance.dice.push(die);
     }
@@ -251,6 +252,7 @@ const mutations = {
     cardInstance.die = makeActionDie(cardInstance);
     for (let i=0; i<numDice; ++i) {
       const die = { ...cardInstance.die, uid: nextDiceUid++, card: cardInstance, location: 'card' };
+      die.modifiers = [];
       roll(die);
       cardInstance.dice.push(die);
     }
@@ -448,6 +450,7 @@ const mutations = {
         die.uid = nextDiceUid++;
         die.owner = playerNum;
         die.location = 'bag';
+        die.modifiers = [];
         roll(die);
         player.bag.push(die);
         player.ownedDice[die.uid] = die;
