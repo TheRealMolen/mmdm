@@ -46,15 +46,19 @@ const roll = die => {
 //
 const state = () => ({
   gameid: null,
-  players: [newPlayer(0, true), newPlayer(1, false)],
+  players: [newPlayer(0, true), newPlayer(1, true)],
   actionCards: [],
   globals: [],
   currentTurn: 0,//Math.floor(Math.random() * 2),
+  activePlayer: 0, // which player needs to give input next?
   phase: 'roll',
+  subphase: '',
   rerolled: false,
 
   selectedDice: [],
   effectsToResolve: [],
+
+  moves: [],
 });
 
 let sync = null;
@@ -170,7 +174,26 @@ const actions = {
     
     const unfieldedCharacters = state.players[state.currentTurn].reserve.filter(die => die.face.type === 'character');
     commit('moveAllDice', { source: 'reserve', dice:unfieldedCharacters, dest: 'used' });
-    commit('changePhase', {phase:'attack'});
+    commit('changePhase', {phase:'attack', subphase:'declare'});
+  },
+
+  declareAttackers({commit, state}) {
+    if (state.phase !== 'attack' || state.subphase !== 'declare') {
+      throw `trying to declare attackers when in the ${state.phase}/${state.subphase} phase is forbidden!`;
+    }
+    if (state.players[state.currentTurn].attack.length === 0) {
+      throw `need to send out some attackers to declare`;
+    }
+    commit('changeActivePlayer');
+    commit('changePhase', {phase:'attack', subphase:'block'});
+  },
+
+  declareBlockers({commit, state}) {
+    if (state.phase !== 'attack' || state.subphase !== 'block') {
+      throw `trying to declare blockers when in the ${state.phase}/${state.subphase} phase is forbidden!`;
+    }
+    commit('changeActivePlayer');
+    commit('changePhase', {phase:'attack', subphase:'modifiers'});
   },
 
   finishTurn({commit, state}) {
@@ -228,8 +251,18 @@ const actions = {
 //    | | | | | | |_| | || (_| | |_| | (_) | | | \__ \
 //    |_| |_| |_|\__,_|\__\__,_|\__|_|\___/|_| |_|___/
 //
-let nextDiceUid = 100;
+let nextDiceUid = -1;
 const mutations = {
+  recordMove(state, {move}) {
+    const dice = move.historyDice ? move.historyDice({game:state}) : state.selectedDice.map(die => die.uid);
+    state.moves.push({
+      when: new Date(Date.now()).toISOString(),
+      who: state.activePlayer,
+      move: move.name,
+      dice,
+    });
+  },
+
   addCardToPlayer(state, {playerNum, card, numDice}) {
     const player = state.players[playerNum];
     const cardInstance = {...card, numDice, owner: playerNum, dice: []};
@@ -263,13 +296,21 @@ const mutations = {
     }
   },
 
-
-  changePhase(state, { phase }) {
-    state.phase = phase;
+  changeActivePlayer(state) {
+    if (state.phase !== 'attack') {
+      throw 'active player must match current turn unless attacking';
+    }
+    state.activePlayer = 1 - state.activePlayer;
+  },
+  changePhase(state, payload) {
+    state.phase = payload.phase;
+    state.subphase = payload.subphase || '';
   },
   endTurn(state) {
     state.currentTurn = 1 - state.currentTurn;
+    state.activePlayer = state.currentTurn;
     state.phase = 'roll';
+    state.subphase = '';
     state.rerolled = false;
 
     state.players.forEach(player => {
@@ -427,8 +468,12 @@ const mutations = {
 
 
   resetGame(state, {startingHealth}) {
+    nextDiceUid = 10;
+
     state.finished = false;
     state.winner = -1;
+
+    state.moves = [];
 
     state.players.forEach((player,playerNum) => {
       player.health = startingHealth;
@@ -462,9 +507,27 @@ const mutations = {
 }
 
 
+
+//                _   _                
+//               | | | |               
+//      __ _  ___| |_| |_ ___ _ __ ___ 
+//     / _` |/ _ \ __| __/ _ \ '__/ __|
+//    | (_| |  __/ |_| ||  __/ |  \__ \
+//     \__, |\___|\__|\__\___|_|  |___/
+//      __/ |                          
+//     |___/  
+const getters = {
+  allowLocalInput(state) {
+    return state.players[state.activePlayer].local;
+  },
+};
+
+
+
 // ----------------------------
 export default {
   state,
   actions,
   mutations,
+  getters,
 };

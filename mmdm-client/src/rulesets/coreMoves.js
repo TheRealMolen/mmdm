@@ -173,7 +173,7 @@ export const startAttackPhase = {
 
 
 
-// ----  S T A R T   A T T A C K  --------------------------------------------------------
+// ----  A T T A C K   W I T H   --------------------------------------------------------
 export const attackWith = {
   name: 'Attack With',
   desc: 'Move characters from the field to attack',
@@ -191,6 +191,77 @@ export const attackWith = {
   },
 };
 
+// ----  R E T R E A T  --------------------------------------------------------
+export const retreat = {
+  name: 'Retreat',
+  desc: 'Return characters from attacking to the field',
+  precondition(game) {
+    if (game.selectedDice.length === 0) {
+      return 'You need to select some characters to retreat';
+    }
+    if (!game.selectedDice.every(die => die.location === 'attack')) {
+      return 'You can only retreat characters from the attack area';
+    }
+  },
+  doit({game, dispatch, commit}) {
+    commit('moveAllDice', {source: 'attack', dice: [...game.selectedDice], dest: 'field'})
+    dispatch('deselect', {dice: game.selectedDice});
+  },
+};
+
+// ----  D E C L A R E   A T T A C K E R S   --------------------------------------------------------
+export const declareAttackers = {
+  name: 'Declare Attackers',
+  desc: 'Tell your opponent that you\'re ready to attack with these characters',
+  precondition(game) {
+    if (game.players[game.currentTurn].attack.length === 0) {
+      return 'You need to choose some characters to attack with';
+    }
+  },
+  doit({dispatch}) {
+    dispatch('declareAttackers');
+  },
+  historyDice({game}) {
+    return [...game.players[game.currentTurn].attack];
+  },
+};
+
+
+
+// ----  B L O C K   W I T H   --------------------------------------------------------
+
+export const blockWith = {
+  name: 'Block With',
+  desc: 'Block attacking characters with your fielded characters',
+  precondition(game) {
+    if (game.selectedDice.length === 0) {
+      return 'You need to select some characters to block with';
+    }
+    throw `writeme`;
+    if (!game.selectedDice.every(die => die.location === 'field')) {
+      return 'You can only attack with characters in the field';
+    }
+  },
+  doit({game, dispatch, commit}) {
+    commit('moveAllDice', {source: 'field', dice: [...game.selectedDice], dest: 'attack'})
+    dispatch('deselect', {dice: game.selectedDice});
+  },
+};
+
+// ----  D E C L A R E   B L O C K E R S   --------------------------------------------------------
+export const declareBlockers = {
+  name: 'Declare Blockers',
+  desc: 'Tell your opponent that you\'ve decided on your blockers',
+  precondition(game) {
+  },
+  doit({dispatch}) {
+    dispatch('declareBlockers');
+  },
+  // TODO: historyDice({game}) {
+  //   return [...game.players[game.currentTurn].attack];
+  // },
+};
+
 
 
 // ----  E N D   T U R N  --------------------------------------------------------
@@ -199,6 +270,9 @@ export const endTurn = {
   precondition(game) {
     if (game.selectedDice.length !== 0) {
       return 'You need to deselect all your dice before finishing your turn';
+    }
+    if (game.players[game.currentTurn].attack.length > 0) {
+      return 'You need to declare attackers to continue the attack phase';
     }
   },
   doit({game, dispatch}) {

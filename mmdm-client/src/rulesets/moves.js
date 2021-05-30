@@ -59,7 +59,19 @@ const gatherMainPhaseMoves = game => {
 
 // -----  A T T A C K  -------------------------------------------------------
 const gatherAttackPhaseMoves = game => {
-  return [coreMoves.attackWith, ...gatherGlobalMoves(game), coreMoves.endTurn];
+  if (game.subphase === 'declare') {
+    return [coreMoves.attackWith, coreMoves.retreat, coreMoves.declareAttackers, coreMoves.endTurn];
+  }
+  else if (game.subphase === 'block') {
+    return [coreMoves.blockWith, coreMoves.declareBlockers];
+  }
+  
+  const moves = [...gatherGlobalMoves(game)];
+  // TODO: moves.push(pass);
+  if (game.activePlayer === game.currentTurn) {
+    moves.push(coreMoves.endTurn/* should be resolveAttack */);
+  }
+  return moves;
 };
 
 

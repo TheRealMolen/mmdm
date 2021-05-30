@@ -21,6 +21,7 @@ export default {
         }
       }
 
+      this.$store.commit('recordMove', {move});
       move.doit({game: this.game, dispatch: this.$store.dispatch, commit: this.$store.commit});
     },
 

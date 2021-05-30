@@ -85,24 +85,30 @@ export default {
 <style lang="less" scoped>
 .play-mat {
   display: grid;
-  min-height: 22rem;
+  min-height: 20rem;
   grid-template-columns: 12% 16% 56% 16%;
-  grid-template-rows: 20% 25% 55%;
+  grid-template-rows: 10% 30% 60%;
   grid-template-areas: 
     "oop attack attack attack"
     "oop used field prep"
     "oop used reserve prep";
 
   &.invert {
-    grid-template-rows: 55% 25% 20%;
+    grid-template-rows: 60% 30% 10%;
     grid-template-areas: 
       "oop prep reserve used"
       "oop prep field used"
       "oop attack attack attack";
+
+    &.active {
+      grid-template-rows: 48% 22% 30%;
     }
+  }
 
   &.active {
     background-color: #8d8;
+    min-height: 24rem;
+    grid-template-rows: 30% 22% 48%;
   }
 
   & > div {
